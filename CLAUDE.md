@@ -29,3 +29,7 @@ This is an online course platform where only administrators can create courses.
 # Design System
 
 For design tokens (colors, usage guidelines, and theming), refer to `.claude/docs/00-colors.md`
+
+# Backend API
+
+For complete Backend API specification (endpoints, request/response formats, authentication), refer to `.claude/docs/01-api-spec.md`
