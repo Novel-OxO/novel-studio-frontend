@@ -33,3 +33,5 @@ For design tokens (colors, usage guidelines, and theming), refer to `.claude/doc
 # Backend API
 
 For complete Backend API specification (endpoints, request/response formats, authentication), refer to `.claude/docs/01-api-spec.md`
+
+For API implementation patterns and architecture (directory structure, type system, error handling, usage patterns), refer to `.claude/docs/02-api-pattern.md`
