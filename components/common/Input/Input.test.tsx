@@ -2,9 +2,6 @@ import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { Input } from "./Input";
 
-// 에러일때
-// disabled일때 상태를 테스트한다.
-
 describe("Input", () => {
   it("renders with label", () => {
     render(<Input label="이메일" id="email" />);
