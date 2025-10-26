@@ -4,6 +4,39 @@
 
 사용자 회원가입 페이지를 구현하여 신규 사용자가 계정을 생성할 수 있도록 합니다.
 
+## 구현 상태
+
+### ✅ 완료
+1. **의존성 설치**
+   - react-hook-form 7.65.0
+   - zod 4.1.12
+   - @hookform/resolvers 5.2.2
+   - 테스트 라이브러리 (jest, @testing-library/react, @testing-library/jest-dom 등)
+
+2. **Zod 스키마 정의** (`lib/validations/auth.ts`)
+   - 이메일, 비밀번호, 비밀번호 확인, 닉네임 검증
+   - SignupFormData 타입 자동 생성
+
+3. **공통 Input 컴포넌트** (`components/common/Input/`)
+   - Input.tsx - forwardRef를 사용한 재사용 가능한 Input 컴포넌트
+   - types.ts - InputProps 타입 정의
+   - Input.test.tsx - 단위 테스트
+
+4. **테스트 환경 구성**
+   - jest.config.js - Next.js와 통합된 Jest 설정
+   - jest.setup.ts - 테스트 환경 초기 설정
+   - jest.d.ts - 글로벌 타입 정의
+
+### 🚧 진행 중
+- 없음
+
+### 📋 예정
+1. **공통 Button 컴포넌트 구현** (`components/common/Button/Button.tsx`)
+2. **SignupForm 컴포넌트 구현** (`components/auth/SignupForm.tsx`)
+3. **회원가입 페이지 구현** (`app/signup/page.tsx`)
+4. **SignupForm 테스트 코드 작성**
+5. **Button 컴포넌트 테스트 코드 작성**
+
 ## 요구사항
 
 ### 기능 요구사항
@@ -12,7 +45,7 @@
    - 이메일 입력 필드 (필수, 이메일 형식 검증)
    - 비밀번호 입력 필드 (필수, 최소 8자, 영문/숫자 조합)
    - 비밀번호 확인 필드 (필수, 비밀번호와 일치)
-   - 이름 입력 필드 (필수, 최소 2자)
+   - 닉네임 입력 필드 (필수, 2-20자)
    - 회원가입 버튼
 
 2. **유효성 검증**
@@ -81,7 +114,7 @@ export const signupSchema = z.object({
   email: z
     .string()
     .min(1, "이메일을 입력해주세요")
-    .email("올바른 이메일 형식이 아닙니다"),
+    .email({ message: "올바른 이메일 형식이 아닙니다" }),
 
   password: z
     .string()
@@ -95,10 +128,10 @@ export const signupSchema = z.object({
     .string()
     .min(1, "비밀번호 확인을 입력해주세요"),
 
-  name: z
+  nickname: z
     .string()
-    .min(2, "이름은 최소 2자 이상이어야 합니다")
-    .max(50, "이름은 최대 50자까지 가능합니다"),
+    .min(2, "닉네임은 최소 2자 이상이어야 합니다")
+    .max(20, "닉네임은 최대 20자까지 가능합니다"),
 }).refine((data) => data.password === data.passwordConfirm, {
   message: "비밀번호가 일치하지 않습니다",
   path: ["passwordConfirm"],
@@ -408,8 +441,7 @@ export const SignupForm: React.FC = () => {
       const request: CreateUserRequest = {
         email: data.email,
         password: data.password,
-        name: data.name,
-        role: "USER", // 기본값: 학생
+        nickname: data.nickname,
       };
       return createUser(request);
     },
@@ -420,12 +452,12 @@ export const SignupForm: React.FC = () => {
     onError: (error) => {
       const apiError = error as ApiErrorResponse;
 
-      // 에러 코드별 메시지 처리
-      if (apiError.error.code === "VALIDATION_001") {
+      // HTTP 상태 코드별 메시지 처리
+      if (apiError.status === 409) {
         setServerError("이미 사용 중인 이메일입니다");
       } else {
         setServerError(
-          apiError.error.message || "회원가입 중 오류가 발생했습니다"
+          apiError.error?.message || "회원가입 중 오류가 발생했습니다"
         );
       }
     },
@@ -455,15 +487,15 @@ export const SignupForm: React.FC = () => {
         {...register("email")}
       />
 
-      {/* 이름 입력 */}
+      {/* 닉네임 입력 */}
       <Input
-        label="이름"
-        id="name"
+        label="닉네임"
+        id="nickname"
         type="text"
         placeholder="홍길동"
-        error={errors.name?.message}
+        error={errors.nickname?.message}
         disabled={isLoading}
-        {...register("name")}
+        {...register("nickname")}
       />
 
       {/* 비밀번호 입력 */}
@@ -608,7 +640,7 @@ describe("SignupForm", () => {
     renderWithClient(<SignupForm />);
 
     expect(screen.getByLabelText(/이메일/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^이름/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/닉네임/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^비밀번호$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/비밀번호 확인/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /회원가입/i })).toBeInTheDocument();
@@ -622,7 +654,7 @@ describe("SignupForm", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/이메일을 입력해주세요/i)).toBeInTheDocument();
-      expect(screen.getByText(/이름은 최소 2자 이상/i)).toBeInTheDocument();
+      expect(screen.getByText(/닉네임은 최소 2자 이상/i)).toBeInTheDocument();
     });
   });
 
@@ -663,7 +695,7 @@ describe("SignupForm", () => {
     fireEvent.change(screen.getByLabelText(/이메일/i), {
       target: { value: "test@test.com" },
     });
-    fireEvent.change(screen.getByLabelText(/^이름/i), {
+    fireEvent.change(screen.getByLabelText(/닉네임/i), {
       target: { value: "홍길동" },
     });
     fireEvent.change(screen.getByLabelText(/^비밀번호$/i), {
@@ -678,9 +710,8 @@ describe("SignupForm", () => {
     await waitFor(() => {
       expect(createUser).toHaveBeenCalledWith({
         email: "test@test.com",
-        name: "홍길동",
+        nickname: "홍길동",
         password: "password123",
-        role: "STUDENT",
       });
     });
   });
@@ -718,22 +749,22 @@ describe("SignupForm", () => {
 {
   email: string;
   password: string;
-  name: string;
-  role: "STUDENT"; // 기본값
+  nickname: string;
 }
 ```
 
 ### 응답 형식
 
 ```typescript
-// 성공
+// 성공 (201 Created)
 {
   success: true;
   data: {
     id: string;
     email: string;
-    name: string;
-    role: "STUDENT";
+    nickname: string;
+    profileImageUrl: string | null;
+    role: "USER";
     createdAt: string;
   }
 }
@@ -742,10 +773,14 @@ describe("SignupForm", () => {
 {
   success: false;
   error: {
-    code: "VALIDATION_001"; // 중복 이메일
+    code: string;
     message: string;
   }
 }
+
+// 에러 응답 예시
+// 400 Bad Request - 유효하지 않은 요청 데이터
+// 409 Conflict - 이미 사용 중인 이메일
 ```
 
 ## 구현 순서
