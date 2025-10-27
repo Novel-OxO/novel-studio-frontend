@@ -232,7 +232,7 @@ export default function AdminCourseListPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <button
                         onClick={() =>
-                          router.push(`/admin/course/${course.id}`)
+                          router.push(`/admin/course/${course.id}/edit`)
                         }
                         className="px-3 py-1 text-sm bg-white text-neutral-95 border border-neutral-95 rounded cursor-pointer"
                       >
