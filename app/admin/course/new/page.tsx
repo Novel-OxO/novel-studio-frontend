@@ -11,6 +11,7 @@ import { ImageUpload } from "@/components/common/ImageUpload/ImageUpload";
 import { Select } from "@/components/common/Select/Select";
 import type { SelectOption } from "@/components/common/Select/types";
 import { Button } from "@/components/common/Button/Button";
+import { RichTextEditor } from "@/components/common/RichTextEditor/RichTextEditor";
 
 // Select 옵션 정의
 const levelOptions: SelectOption[] = [
@@ -41,8 +42,8 @@ export default function CreateCoursePage() {
   const createCourseMutation = useMutation({
     mutationFn: (data: CreateCourseRequest) => coursesApi.create(data),
     onSuccess: (course) => {
-      // 코스 생성 후 수정 페이지로 리다이렉트
-      router.push(`/admin/course/${course.id}`);
+      // 코스 생성 후 코스 목록 페이지로 리다이렉트
+      router.push("/admin/course/list");
     },
     onError: (error: any) => {
       setError(
@@ -73,9 +74,7 @@ export default function CreateCoursePage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -137,21 +136,15 @@ export default function CreateCoursePage() {
           </div>
 
           <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-neutral-95 mb-2"
-            >
+            <label className="block text-sm font-medium text-neutral-95 mb-2">
               설명 <span className="text-red-500">*</span>
             </label>
-            <textarea
-              id="description"
-              name="description"
+            <RichTextEditor
               value={formData.description}
-              onChange={handleChange}
-              rows={5}
-              className="w-full px-3 py-2 border border-neutral-80 rounded-lg focus:outline-none focus:ring-2 focus:ring-mint-40"
-              placeholder="이 코스에서 배울 내용을 설명해주세요."
-              required
+              onChange={(html) =>
+                setFormData((prev) => ({ ...prev, description: html }))
+              }
+              placeholder="이 코스에서 배울 내용을 설명해주세요..."
             />
           </div>
 
@@ -181,7 +174,7 @@ export default function CreateCoursePage() {
               type="number"
               id="price"
               name="price"
-              value={formData.price}
+              value={formData.price || ""}
               onChange={handleChange}
               min="0"
               className="w-full px-3 py-2 border border-neutral-80 rounded-lg focus:outline-none focus:ring-2 focus:ring-mint-40"
