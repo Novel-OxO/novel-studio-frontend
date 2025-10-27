@@ -8,6 +8,22 @@ import { CourseLevel, CourseStatus } from "@/lib/api/common/types";
 import type { CreateCourseRequest } from "@/lib/api/courses/types";
 import { ErrorMessage } from "@/components/common/ErrorMessage/ErrorMessage";
 import { ImageUpload } from "@/components/common/ImageUpload/ImageUpload";
+import { Select } from "@/components/common/Select/Select";
+import type { SelectOption } from "@/components/common/Select/types";
+import { Button } from "@/components/common/Button/Button";
+
+// Select 옵션 정의
+const levelOptions: SelectOption[] = [
+  { value: CourseLevel.BEGINNER, label: "초급" },
+  { value: CourseLevel.INTERMEDIATE, label: "중급" },
+  { value: CourseLevel.ADVANCED, label: "고급" },
+];
+
+const statusOptions: SelectOption[] = [
+  { value: CourseStatus.DRAFT, label: "초안" },
+  { value: CourseStatus.PUBLISHED, label: "게시됨" },
+  { value: CourseStatus.ARCHIVED, label: "보관됨" },
+];
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -29,7 +45,9 @@ export default function CreateCoursePage() {
       router.push(`/admin/course/${course.id}`);
     },
     onError: (error: any) => {
-      setError(error.response?.data?.error?.message || "코스 생성에 실패했습니다.");
+      setError(
+        error.response?.data?.error?.message || "코스 생성에 실패했습니다."
+      );
     },
   });
 
@@ -55,7 +73,9 @@ export default function CreateCoursePage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -67,13 +87,19 @@ export default function CreateCoursePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-neutral-10 mb-6">코스 생성</h1>
+        <h1 className="text-3xl font-bold text-neutral-95 mb-6">코스 생성</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-lg shadow-md border border-neutral-80 p-6 space-y-6"
+        >
           {error && <ErrorMessage message={error} />}
 
           <div>
-            <label htmlFor="slug" className="block text-sm font-medium text-neutral-20 mb-2">
+            <label
+              htmlFor="slug"
+              className="block text-sm font-medium text-neutral-95 mb-2"
+            >
               슬러그 <span className="text-red-500">*</span>
             </label>
             <input
@@ -92,7 +118,10 @@ export default function CreateCoursePage() {
           </div>
 
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-neutral-20 mb-2">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-neutral-95 mb-2"
+            >
               제목 <span className="text-red-500">*</span>
             </label>
             <input
@@ -108,7 +137,10 @@ export default function CreateCoursePage() {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-neutral-20 mb-2">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-neutral-95 mb-2"
+            >
               설명 <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -124,20 +156,25 @@ export default function CreateCoursePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-20 mb-2">
+            <label className="block text-sm font-medium text-neutral-95 mb-2">
               썸네일 이미지
             </label>
             <ImageUpload
               variant="thumbnail"
               value={formData.thumbnailUrl || null}
-              onChange={(url) => setFormData((prev) => ({ ...prev, thumbnailUrl: url || "" }))}
+              onChange={(url) =>
+                setFormData((prev) => ({ ...prev, thumbnailUrl: url || "" }))
+              }
               onError={setError}
               maxSizeInMB={10}
             />
           </div>
 
           <div>
-            <label htmlFor="price" className="block text-sm font-medium text-neutral-20 mb-2">
+            <label
+              htmlFor="price"
+              className="block text-sm font-medium text-neutral-95 mb-2"
+            >
               가격 (원)
             </label>
             <input
@@ -153,54 +190,63 @@ export default function CreateCoursePage() {
           </div>
 
           <div>
-            <label htmlFor="level" className="block text-sm font-medium text-neutral-20 mb-2">
+            <label className="block text-sm font-medium text-neutral-95 mb-2">
               난이도
             </label>
-            <select
+            <Select
               id="level"
               name="level"
-              value={formData.level}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-neutral-80 rounded-lg focus:outline-none focus:ring-2 focus:ring-mint-40"
-            >
-              <option value={CourseLevel.BEGINNER}>초급</option>
-              <option value={CourseLevel.INTERMEDIATE}>중급</option>
-              <option value={CourseLevel.ADVANCED}>고급</option>
-            </select>
+              value={formData.level as string}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  level: value as CourseLevel,
+                }))
+              }
+              options={levelOptions}
+              placeholder="난이도를 선택하세요"
+            />
           </div>
 
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-neutral-20 mb-2">
+            <label className="block text-sm font-medium text-neutral-95 mb-2">
               상태
             </label>
-            <select
+            <Select
               id="status"
               name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-neutral-80 rounded-lg focus:outline-none focus:ring-2 focus:ring-mint-40"
-            >
-              <option value={CourseStatus.DRAFT}>초안</option>
-              <option value={CourseStatus.PUBLISHED}>게시됨</option>
-              <option value={CourseStatus.ARCHIVED}>보관됨</option>
-            </select>
+              value={formData.status as string}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  status: value as CourseStatus,
+                }))
+              }
+              options={statusOptions}
+              placeholder="상태를 선택하세요"
+            />
           </div>
 
           <div className="flex gap-3 pt-4">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => router.back()}
-              className="flex-1 px-4 py-2 border border-neutral-80 text-neutral-20 rounded-lg hover:bg-neutral-95 font-medium"
+              fullWidth
             >
               취소
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="black"
+              size="sm"
               disabled={createCourseMutation.isPending}
-              className="flex-1 px-4 py-2 bg-mint-40 text-white rounded-lg hover:bg-mint-30 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              isLoading={createCourseMutation.isPending}
+              fullWidth
             >
-              {createCourseMutation.isPending ? "생성 중..." : "코스 생성"}
-            </button>
+              코스 생성
+            </Button>
           </div>
         </form>
       </div>
