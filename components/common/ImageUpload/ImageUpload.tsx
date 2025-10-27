@@ -12,6 +12,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   maxSizeInMB = 5,
   disabled = false,
   className = "",
+  variant = "profile",
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -66,11 +67,18 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     fileInputRef.current?.click();
   };
 
+  // Variant에 따른 스타일 설정
+  const containerStyle = variant === "profile"
+    ? "w-32 h-32 rounded-full"
+    : "w-full aspect-video rounded-lg";
+
+  const imageAlt = variant === "profile" ? "Profile" : "Thumbnail";
+
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Upload progress - 업로드 중일 때만 표시 */}
       {isUploading && (
-        <div className="w-32 h-32 rounded-full bg-neutral-10 border-2 border-neutral-20 flex items-center justify-center">
+        <div className={`${containerStyle} bg-neutral-10 border-2 border-neutral-20 flex items-center justify-center`}>
           <div className="text-center">
             <div className="text-sm font-medium text-neutral-70">
               {uploadProgress}%
@@ -82,10 +90,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {/* Preview - 업로드 중이 아닐 때만 표시 */}
       {!isUploading && value && (
-        <div className="relative w-32 h-32 rounded-full overflow-hidden bg-neutral-10 border-2 border-neutral-20">
+        <div className={`relative ${containerStyle} overflow-hidden bg-neutral-10 border-2 border-neutral-20`}>
           <img
             src={value}
-            alt="Profile"
+            alt={imageAlt}
             className="w-full h-full object-cover"
           />
         </div>
@@ -93,7 +101,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {/* No image placeholder - 업로드 중이 아니고 이미지가 없을 때만 표시 */}
       {!isUploading && !value && (
-        <div className="w-32 h-32 rounded-full bg-neutral-10 border-2 border-dashed border-neutral-30 flex items-center justify-center">
+        <div className={`${containerStyle} bg-neutral-10 border-2 border-dashed border-neutral-30 flex items-center justify-center`}>
           <span className="text-neutral-50 text-sm">이미지 없음</span>
         </div>
       )}

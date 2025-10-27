@@ -7,6 +7,7 @@ import { coursesApi } from "@/lib/api/courses/api";
 import { CourseLevel, CourseStatus } from "@/lib/api/common/types";
 import type { CreateCourseRequest } from "@/lib/api/courses/types";
 import { ErrorMessage } from "@/components/common/ErrorMessage/ErrorMessage";
+import { ImageUpload } from "@/components/common/ImageUpload/ImageUpload";
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -123,17 +124,15 @@ export default function CreateCoursePage() {
           </div>
 
           <div>
-            <label htmlFor="thumbnailUrl" className="block text-sm font-medium text-neutral-20 mb-2">
-              썸네일 URL
+            <label className="block text-sm font-medium text-neutral-20 mb-2">
+              썸네일 이미지
             </label>
-            <input
-              type="url"
-              id="thumbnailUrl"
-              name="thumbnailUrl"
-              value={formData.thumbnailUrl}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-neutral-80 rounded-lg focus:outline-none focus:ring-2 focus:ring-mint-40"
-              placeholder="https://example.com/thumbnail.jpg"
+            <ImageUpload
+              variant="thumbnail"
+              value={formData.thumbnailUrl || null}
+              onChange={(url) => setFormData((prev) => ({ ...prev, thumbnailUrl: url || "" }))}
+              onError={setError}
+              maxSizeInMB={10}
             />
           </div>
 
