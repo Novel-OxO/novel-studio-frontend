@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
             <>
               {isAdmin && (
                 <Link
-                  href="/admin/courses"
+                  href="/admin/course/list"
                   className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
                 >
                   코스 관리
