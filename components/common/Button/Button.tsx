@@ -19,6 +19,8 @@ export function Button({
       "bg-mint-30 text-white hover:bg-mint-40 focus:ring-mint-40 disabled:bg-neutral-30 disabled:cursor-not-allowed",
     secondary:
       "bg-white text-neutral-80 border border-neutral-20 hover:bg-neutral-5 active:bg-neutral-10 focus:ring-neutral-40 disabled:bg-neutral-5 disabled:text-neutral-30 disabled:cursor-not-allowed",
+    black:
+      "bg-neutral-95 text-neutral-3 hover:bg-neutral-80 focus:ring-neutral-40 disabled:bg-neutral-50 disabled:cursor-not-allowed",
   };
 
   const sizeStyles = {

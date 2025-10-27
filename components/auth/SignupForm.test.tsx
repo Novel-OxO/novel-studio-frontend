@@ -133,7 +133,7 @@ describe("SignupForm", () => {
         nickname: "홍길동",
         password: "password123",
       });
-      expect(mockPush).toHaveBeenCalledWith("/login");
+      expect(mockPush).toHaveBeenCalledWith("/signin");
     });
   });
 
