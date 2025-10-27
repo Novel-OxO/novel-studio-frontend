@@ -26,16 +26,16 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
     >
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* 로고 */}
-        <Link href="/" className="flex items-center gap-3 text-2xl font-bold text-mint-40 cursor-pointer">
-          <img src="/logo.svg" alt="Novel Studio Logo" className="w-8 h-8" />
-          Novel Studio
+        <Link href="/" className="flex items-center gap-2 md:gap-3 text-xl md:text-2xl font-bold text-mint-40 cursor-pointer">
+          <img src="/logo.svg" alt="Novel Studio Logo" className="w-6 h-6 md:w-8 md:h-8" />
+          <span className="hidden sm:inline">Novel Studio</span>
         </Link>
 
         {/* 네비게이션 */}
-        <nav className="flex items-center gap-6">
+        <nav className="flex items-center gap-2 md:gap-4 lg:gap-6 text-sm md:text-base">
           <Link
             href="/courses"
-            className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
+            className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
           >
             코스
           </Link>
@@ -45,32 +45,32 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
               {isAdmin && (
                 <Link
                   href="/admin/course/list"
-                  className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
+                  className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
                 >
                   코스 관리
                 </Link>
               )}
               <Link
                 href="/my-courses"
-                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
+                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
               >
                 내 코스
               </Link>
               <Link
                 href="/cart"
-                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
+                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
               >
                 장바구니
               </Link>
               <Link
                 href="/profile"
-                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
+                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
               >
                 내 정보
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
+                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
               >
                 로그아웃
               </button>
@@ -79,13 +79,13 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
             <>
               <Link
                 href="/signin"
-                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
+                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
               >
                 로그인
               </Link>
               <Link
                 href="/signup"
-                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer"
+                className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
               >
                 회원가입
               </Link>
