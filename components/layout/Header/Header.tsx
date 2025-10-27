@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { clearTokens } from "@/lib/token";
@@ -27,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-2 md:gap-3 text-xl md:text-2xl font-bold text-mint-40 cursor-pointer">
-          <img src="/logo.svg" alt="Novel Studio Logo" className="w-6 h-6 md:w-8 md:h-8" />
+          <Image src="/logo.svg" alt="Novel Studio Logo" width={32} height={32} className="w-6 h-6 md:w-8 md:h-8" />
           <span className="hidden sm:inline">Novel Studio</span>
         </Link>
 

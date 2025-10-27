@@ -64,7 +64,7 @@ describe("Header - Business Logic", () => {
     it("updates UI state after logout", () => {
       (tokenStorage.isAuthenticated as jest.Mock).mockReturnValue(true);
 
-      const { rerender } = render(<Header />);
+      render(<Header />);
 
       // 초기 상태: 로그인됨
       expect(screen.getByText("로그아웃")).toBeInTheDocument();

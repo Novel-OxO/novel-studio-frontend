@@ -41,13 +41,14 @@ export default function CreateCoursePage() {
 
   const createCourseMutation = useMutation({
     mutationFn: (data: CreateCourseRequest) => coursesApi.create(data),
-    onSuccess: (course) => {
+    onSuccess: () => {
       // 코스 생성 후 코스 목록 페이지로 리다이렉트
       router.push("/admin/course/list");
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const apiError = error as { response?: { data?: { error?: { message?: string } } } };
       setError(
-        error.response?.data?.error?.message || "코스 생성에 실패했습니다."
+        apiError.response?.data?.error?.message || "코스 생성에 실패했습니다."
       );
     },
   });

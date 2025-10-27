@@ -91,6 +91,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       {/* Preview - 업로드 중이 아닐 때만 표시 */}
       {!isUploading && value && (
         <div className={`relative ${containerStyle} overflow-hidden bg-neutral-10 border-2 border-neutral-20`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
             alt={imageAlt}
