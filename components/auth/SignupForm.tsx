@@ -37,7 +37,7 @@ export const SignupForm: React.FC = () => {
       return usersApi.create(request);
     },
     onSuccess: () => {
-      router.push("/login");
+      router.push("/signin");
     },
     onError: (error: AxiosError<ApiErrorResponse> | ApiErrorResponse) => {
       if (error instanceof AxiosError) {
@@ -128,7 +128,7 @@ export const SignupForm: React.FC = () => {
       <p className="text-center text-sm text-neutral-50">
         이미 계정이 있으신가요?{" "}
         <a
-          href="/login"
+          href="/signin"
           className="text-mint-40 hover:text-mint-50 font-medium underline"
         >
           로그인

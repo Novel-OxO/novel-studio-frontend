@@ -22,4 +22,6 @@ export interface CurrentUser {
   userId: string;
   email: string;
   role: UserRole;
+  nickname: string;
+  profileImageUrl: string | null;
 }

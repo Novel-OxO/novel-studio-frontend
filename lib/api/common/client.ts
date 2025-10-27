@@ -9,6 +9,11 @@ import type {
   ApiErrorResponse,
   ApiSuccessResponse,
 } from "./types";
+import {
+  getAccessToken,
+  getRefreshToken,
+  clearTokens,
+} from "@/lib/token/storage";
 
 // ============================================
 // Configuration
@@ -18,44 +23,6 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 
 const TIMEOUT = 30000; // 30 seconds
-
-// ============================================
-// Token Management
-// ============================================
-
-const TOKEN_STORAGE_KEY = "novel_studio_access_token";
-const REFRESH_TOKEN_STORAGE_KEY = "novel_studio_refresh_token";
-
-const getAccessToken = (): string | null => {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
-};
-
-export const setAccessToken = (token: string): void => {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(TOKEN_STORAGE_KEY, token);
-};
-
-const getRefreshToken = (): string | null => {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
-};
-
-export const setRefreshToken = (token: string): void => {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, token);
-};
-
-export const clearTokens = (): void => {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(TOKEN_STORAGE_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
-};
-
-export const setTokens = (accessToken: string, refreshToken: string): void => {
-  setAccessToken(accessToken);
-  setRefreshToken(refreshToken);
-};
 
 // ============================================
 // Axios Instance Creation
@@ -112,26 +79,26 @@ const createApiClient = (): AxiosInstance => {
         if (refreshToken) {
           try {
             // TODO: Token 재발급 기능 구현
-            // For now, clear tokens and redirect to login
+            // For now, clear tokens and redirect to signin
             clearTokens();
 
-            // Redirect to login page (client-side only)
+            // Redirect to signin page (client-side only)
             if (typeof window !== "undefined") {
-              window.location.href = "/login";
+              window.location.href = "/signin";
             }
           } catch (refreshError) {
             // Refresh failed, clear tokens and redirect
             clearTokens();
             if (typeof window !== "undefined") {
-              window.location.href = "/login";
+              window.location.href = "/signin";
             }
             return Promise.reject(refreshError);
           }
         } else {
-          // No refresh token available, redirect to login
+          // No refresh token available, redirect to signin
           clearTokens();
           if (typeof window !== "undefined") {
-            window.location.href = "/login";
+            window.location.href = "/signin";
           }
         }
       }

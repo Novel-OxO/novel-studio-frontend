@@ -1,4 +1,5 @@
-import { post, get, setTokens } from "../common/client";
+import { post, get } from "../common/client";
+import { setTokens } from "@/lib/token/storage";
 import type { SignInRequest, AuthTokens, CurrentUser } from "./types";
 
 // ============================================

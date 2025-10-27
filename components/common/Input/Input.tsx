@@ -9,7 +9,7 @@ import type { InputProps } from "./types";
  * forwardRef를 사용하여 register() 함수와 호환
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, id, error, fullWidth = true, disabled, ...rest },
+  { label, id, error, fullWidth = true, disabled, readOnly, ...rest },
   ref
 ) {
   const hasError = !!error;
@@ -31,9 +31,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           hasError
             ? "border-red-30 focus:ring-red-20"
             : "border-neutral-20 focus:ring-mint-40",
-          disabled && "bg-neutral-5 cursor-not-allowed"
+          disabled && "bg-neutral-5 cursor-not-allowed",
+          readOnly && "!bg-neutral-5 !text-neutral-50 cursor-default focus:ring-0 focus:border-neutral-20"
         )}
         disabled={disabled}
+        readOnly={readOnly}
         aria-invalid={hasError ? "true" : "false"}
         aria-describedby={hasError ? `${id}-error` : undefined}
         {...rest}
