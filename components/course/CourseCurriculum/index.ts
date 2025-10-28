@@ -1,0 +1,1 @@
+export { CourseCurriculum } from "./CourseCurriculum";

@@ -15,7 +15,11 @@ export const LectureFormModal: React.FC<LectureFormModalProps> = ({
   isLoading = false,
   mode,
 }) => {
-  const [formData, setFormData] = useState({
+  // Track previous isOpen state to detect modal opening
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  // Initialize form data from initialData
+  const getInitialFormData = () => ({
     title: initialData?.title || "",
     description: initialData?.description || "",
     duration: initialData?.duration?.toString() || "",
@@ -23,24 +27,21 @@ export const LectureFormModal: React.FC<LectureFormModalProps> = ({
     videoUrl: initialData?.videoUrl || "",
   });
 
+  const [formData, setFormData] = useState(getInitialFormData);
+
   const [errors, setErrors] = useState({
     title: "",
     videoUrl: "",
   });
 
-  // Reset form when modal opens/closes or initialData changes
-  useEffect(() => {
+  // Reset form when modal opens (sync state without useEffect)
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
-      setFormData({
-        title: initialData?.title || "",
-        description: initialData?.description || "",
-        duration: initialData?.duration?.toString() || "",
-        isPreview: initialData?.isPreview || false,
-        videoUrl: initialData?.videoUrl || "",
-      });
+      setFormData(getInitialFormData());
       setErrors({ title: "", videoUrl: "" });
     }
-  }, [isOpen, initialData]);
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,106 +92,114 @@ export const LectureFormModal: React.FC<LectureFormModalProps> = ({
             </h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col flex-1 min-h-0"
+          >
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-            {/* Title */}
-            <Input
-              label="강의 제목"
-              id="title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              error={errors.title}
-              placeholder="예: 1. TypeScript 기초"
-              disabled={isLoading}
-              required
-            />
-
-            {/* Description */}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="description"
-                className="text-sm font-bold text-neutral-70"
-              >
-                강의 설명
-              </label>
-              <textarea
-                id="description"
-                value={formData.description}
+              {/* Title */}
+              <Input
+                label="강의 제목"
+                id="title"
+                value={formData.title}
                 onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
+                  setFormData({ ...formData, title: e.target.value })
                 }
-                placeholder="TypeScript의 기본 문법을 배웁니다"
+                error={errors.title}
+                placeholder="예: 1. TypeScript 기초"
                 disabled={isLoading}
-                rows={4}
-                className="px-2 py-1 rounded-sm border border-neutral-20 bg-white text-neutral-80 placeholder:text-neutral-30 focus:outline-none focus:ring-2 focus:ring-mint-40 transition-colors"
+                required
               />
-            </div>
 
-            {/* Duration - Read Only */}
-            <div className="flex flex-col gap-2">
-              <label htmlFor="duration" className="text-sm font-bold text-neutral-70">
-                재생 시간
-              </label>
-              <input
-                id="duration"
-                type="text"
-                value={
-                  formData.duration
-                    ? formatDuration(Number(formData.duration))
-                    : ""
-                }
-                placeholder="비디오 업로드 시 자동 계산됩니다"
-                readOnly
-                className="px-2 py-1 rounded-sm border border-neutral-20 bg-neutral-5 text-neutral-50 cursor-default focus:ring-0 focus:border-neutral-20"
-              />
-            </div>
+              {/* Description */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="description"
+                  className="text-sm font-bold text-neutral-70"
+                >
+                  강의 설명
+                </label>
+                <textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="TypeScript의 기본 문법을 배웁니다"
+                  disabled={isLoading}
+                  rows={4}
+                  className="px-2 py-1 rounded-sm border border-neutral-20 bg-white text-neutral-80 placeholder:text-neutral-30 focus:outline-none focus:ring-2 focus:ring-mint-40 transition-colors"
+                />
+              </div>
 
-            {/* Is Preview */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isPreview"
-                checked={formData.isPreview}
-                onChange={(e) =>
-                  setFormData({ ...formData, isPreview: e.target.checked })
-                }
-                disabled={isLoading}
-                className="w-4 h-4 text-mint-50 border-neutral-20 rounded focus:ring-2 focus:ring-mint-40"
-              />
-              <label
-                htmlFor="isPreview"
-                className="text-sm font-medium text-neutral-70 cursor-pointer"
-              >
-                미리보기 가능
-              </label>
-            </div>
+              {/* Duration - Read Only */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="duration"
+                  className="text-sm font-bold text-neutral-70"
+                >
+                  재생 시간
+                </label>
+                <input
+                  id="duration"
+                  type="text"
+                  value={
+                    formData.duration
+                      ? formatDuration(Number(formData.duration))
+                      : ""
+                  }
+                  placeholder="비디오 업로드 시 자동 계산됩니다"
+                  readOnly
+                  className="px-2 py-1 rounded-sm border border-neutral-20 bg-neutral-5 text-neutral-50 cursor-default focus:ring-0 focus:border-neutral-20"
+                />
+              </div>
 
-            {/* Video Upload */}
-            <div>
-              <label className="block text-sm font-bold text-neutral-70 mb-2">
-                비디오
-              </label>
-              <VideoUpload
-                value={formData.videoUrl}
-                onChange={(url) =>
-                  setFormData((prev) => ({ ...prev, videoUrl: url || "" }))
-                }
-                onDurationChange={(duration) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    duration: duration.toString(),
-                  }))
-                }
-                onError={(error) => setErrors({ ...errors, videoUrl: error })}
-                disabled={isLoading}
-              />
-              {errors.videoUrl && (
-                <p className="text-sm text-red-50 mt-1">{errors.videoUrl}</p>
-              )}
-            </div>
+              {/* Is Preview */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isPreview"
+                  checked={formData.isPreview}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isPreview: e.target.checked })
+                  }
+                  disabled={isLoading}
+                  className="w-4 h-4 text-mint-50 border-neutral-20 rounded focus:ring-2 focus:ring-mint-40"
+                />
+                <label
+                  htmlFor="isPreview"
+                  className="text-sm font-medium text-neutral-70 cursor-pointer"
+                >
+                  미리보기 가능
+                </label>
+              </div>
+
+              {/* Video Upload */}
+              <div>
+                <label className="block text-sm font-bold text-neutral-70 mb-2">
+                  비디오
+                </label>
+                <VideoUpload
+                  value={formData.videoUrl}
+                  onChange={(url) =>
+                    setFormData((prev) => ({ ...prev, videoUrl: url || "" }))
+                  }
+                  onDurationChange={(duration) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      duration: duration.toString(),
+                    }))
+                  }
+                  onError={(error) =>
+                    setErrors((prev) => ({ ...prev, videoUrl: error }))
+                  }
+                  disabled={isLoading}
+                />
+                {errors.videoUrl && (
+                  <p className="text-sm text-red-50 mt-1">{errors.videoUrl}</p>
+                )}
+              </div>
             </div>
 
             {/* Actions - Fixed */}
