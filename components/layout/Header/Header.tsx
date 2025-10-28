@@ -34,13 +34,6 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
 
         {/* 네비게이션 */}
         <nav className="flex items-center gap-2 md:gap-4 lg:gap-6 text-sm md:text-base">
-          <Link
-            href="/courses"
-            className="text-neutral-3 hover:text-neutral-10 font-bold cursor-pointer whitespace-nowrap"
-          >
-            코스
-          </Link>
-
           {isLoggedIn ? (
             <>
               {isAdmin && (
