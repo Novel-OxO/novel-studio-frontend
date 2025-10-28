@@ -1,23 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import * as PortOne from "@portone/browser-sdk/v2";
 import { useCartItems } from "@/hooks/api/useCartItems";
 import { useRemoveFromCart } from "@/hooks/api/useRemoveFromCart";
+import { useCreateOrder } from "@/hooks/api/useCreateOrder";
+import { useVerifyPayment } from "@/hooks/api/useVerifyPayment";
 import { useConfirm } from "@/hooks/useConfirm";
 import { CartItem } from "@/components/cart/CartItem";
 import { formatPrice } from "@/lib/utils/format/price";
 import type { ApiErrorResponse } from "@/lib/api/common/types";
+import type { Order } from "@/lib/api/orders/types";
 
 const isApiErrorResponse = (error: unknown): error is ApiErrorResponse => {
   return typeof error === "object" && error !== null && "error" in error;
 };
 
 export default function CartPage() {
+  const router = useRouter();
   const { data: cartItems = [], isLoading, error } = useCartItems();
   const removeFromCart = useRemoveFromCart();
+  const createOrder = useCreateOrder();
+  const verifyPayment = useVerifyPayment();
   const { confirm } = useConfirm();
 
-  const totalPrice = cartItems.reduce(
+  const totalAmount = cartItems.reduce(
     (sum, item) => sum + item.course.price,
     0
   );
@@ -50,9 +58,99 @@ export default function CartPage() {
     });
   };
 
-  const handleCheckout = () => {
-    // TODO: Implement checkout functionality
-    console.log("Proceed to checkout");
+  const requestPayment = async (order: Order) => {
+    try {
+      console.log("Order:", order);
+      console.log("Total Amount:", order.totalAmount);
+
+      const response = await PortOne.requestPayment({
+        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
+        paymentId: `payment_${order.id}_${Date.now()}`,
+        orderName: `코스 ${order.orderItems.length}개`,
+        totalAmount: order.totalAmount,
+        currency: "CURRENCY_KRW",
+        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!,
+        payMethod: "CARD",
+      });
+
+      if (response?.code != null) {
+        throw new Error(response.message);
+      }
+
+      if (!response) {
+        throw new Error("결제 응답이 없습니다");
+      }
+
+      // 결제 검증
+      await handleVerifyPayment(response.paymentId, order.id);
+    } catch (error) {
+      console.error("결제 요청 실패:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "결제 요청 중 오류가 발생했습니다.";
+
+      confirm({
+        title: "결제 실패",
+        message: errorMessage,
+        confirmText: "확인",
+        cancelText: "",
+        variant: "danger",
+      });
+    }
+  };
+
+  const handleVerifyPayment = async (paymentId: string, orderId: string) => {
+    verifyPayment.mutate(
+      { paymentId, orderId },
+      {
+        onSuccess: () => {
+          router.push(`/orders/${orderId}/complete`);
+        },
+        onError: (error) => {
+          const errorMessage = isApiErrorResponse(error)
+            ? error.error.message
+            : "결제 검증 중 오류가 발생했습니다.";
+
+          confirm({
+            title: "결제 검증 실패",
+            message: errorMessage,
+            confirmText: "확인",
+            cancelText: "",
+            variant: "danger",
+          });
+        },
+      }
+    );
+  };
+
+  const handleCheckout = async () => {
+    if (cartItems.length === 0) {
+      confirm({
+        title: "장바구니가 비어있습니다",
+        message: "결제할 코스가 없습니다.",
+        confirmText: "확인",
+        cancelText: "",
+      });
+      return;
+    }
+
+    createOrder.mutate(undefined, {
+      onSuccess: async (order) => {
+        await requestPayment(order);
+      },
+      onError: (error) => {
+        const errorMessage = isApiErrorResponse(error)
+          ? error.error.message
+          : "주문 생성 중 오류가 발생했습니다.";
+
+        confirm({
+          title: "주문 생성 실패",
+          message: errorMessage,
+          confirmText: "확인",
+          cancelText: "",
+          variant: "danger",
+        });
+      },
+    });
   };
 
   return (
@@ -157,7 +255,7 @@ export default function CartPage() {
                     <div className="border-t border-neutral-10 pt-3">
                       <div className="flex justify-between text-xl font-bold text-neutral-80">
                         <span>총 금액</span>
-                        <span>{formatPrice(totalPrice)}</span>
+                        <span>{formatPrice(totalAmount)}</span>
                       </div>
                     </div>
                   </div>
