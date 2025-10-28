@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { Header } from "@/components/layout/Header/Header";
-import { Footer } from "@/components/layout/Footer/Footer";
 import { ConfirmProvider } from "@/contexts/ConfirmContext";
 import { PromptProvider } from "@/contexts/PromptContext";
+import { LayoutContent } from "@/components/layout/LayoutContent";
 
 export const metadata: Metadata = {
   title: "Novel Studio",
@@ -22,9 +21,7 @@ export default function RootLayout({
         <Providers>
           <ConfirmProvider>
             <PromptProvider>
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
+              <LayoutContent>{children}</LayoutContent>
             </PromptProvider>
           </ConfirmProvider>
         </Providers>

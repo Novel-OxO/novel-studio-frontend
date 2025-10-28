@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { enrollmentsApi } from "@/lib/api/enrollments/api";
 import { useState, useEffect, useRef } from "react";
 import type { EnrolledLecture } from "@/lib/api/enrollments/types";
+import Link from "next/link";
 
 export default function LearnPage() {
   const params = useParams();
@@ -193,10 +194,10 @@ export default function LearnPage() {
 
   return (
     <div className="flex h-screen overflow-hidden flex-col lg:flex-row">
-      {/* Main Content - Video Player */}
+      {/* Main Content - Video Player Only */}
       <div className="flex-1 flex flex-col bg-black">
         {/* Video Player */}
-        <div className="flex-1 relative aspect-video lg:aspect-auto">
+        <div className="h-full relative">
           {currentLecture?.videoUrl ? (
             <>
               <video
@@ -227,48 +228,13 @@ export default function LearnPage() {
           )}
         </div>
 
-        {/* Lecture Info & Controls */}
-        <div className="bg-gray-900 text-white p-4">
-          <div className="flex items-start justify-between mb-2">
-            <h2 className="text-xl font-semibold flex-1">
-              {currentLecture?.title}
-            </h2>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 text-sm ml-2"
-            >
-              {sidebarOpen ? "목록 닫기" : "목록 보기"}
-            </button>
-          </div>
-          {currentLecture?.description && (
-            <p className="text-sm text-gray-400 mb-4">
-              {currentLecture.description}
-            </p>
-          )}
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex gap-2">
-              <button
-                onClick={handlePrevious}
-                disabled={currentLectureIndex === 0}
-                className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                이전 강의
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={currentLectureIndex === allLectures.length - 1}
-                className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                다음 강의
-              </button>
-            </div>
-
-            <div className="text-sm text-gray-400">
-              진행률: {courseDetail.enrollment.progress}%
-            </div>
-          </div>
-        </div>
+        {/* Mobile Sidebar Toggle */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden fixed bottom-4 right-4 z-40 px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700"
+        >
+          {sidebarOpen ? "닫기" : "목록"}
+        </button>
       </div>
 
       {/* Sidebar - Course Structure */}
@@ -280,19 +246,47 @@ export default function LearnPage() {
           ${sidebarOpen ? "translate-x-0" : "translate-x-full"}
         `}
       >
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex-1">
-            <h1 className="text-lg font-bold mb-1">{courseDetail.title}</h1>
-            <p className="text-sm text-gray-600">
-              전체 진행률: {courseDetail.enrollment.progress}%
-            </p>
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex-1">
+              <h1 className="text-lg font-bold mb-1">{courseDetail.title}</h1>
+              <p className="text-sm text-gray-600">
+                전체 진행률: {courseDetail.enrollment.progress}%
+              </p>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-2 hover:bg-gray-100 rounded"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded"
-          >
-            ✕
-          </button>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <button
+                onClick={handlePrevious}
+                disabled={currentLectureIndex === 0}
+                className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                ← 이전
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={currentLectureIndex === allLectures.length - 1}
+                className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                다음 →
+              </button>
+            </div>
+            <Link
+              href={`/learn/${enrollmentId}/qna`}
+              className="w-full px-3 py-2 bg-blue-600 text-white text-center rounded hover:bg-blue-700 text-sm font-medium"
+            >
+              💬 질문하기
+            </Link>
+          </div>
         </div>
 
         {/* Sections & Lectures */}
