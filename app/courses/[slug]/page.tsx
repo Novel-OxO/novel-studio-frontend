@@ -2,20 +2,56 @@
 
 import { useParams } from "next/navigation";
 import { useCourseBySlug } from "@/hooks/api/useCourseBySlug";
+import { useAddToCart } from "@/hooks/api/useAddToCart";
+import { useConfirm } from "@/hooks/useConfirm";
 import { CourseThumbnail } from "@/components/course/CourseThumbnail";
 import { CourseHeader } from "@/components/course/CourseHeader";
 import { CourseCurriculum } from "@/components/course/CourseCurriculum";
 import { CourseSidebar } from "@/components/course/CourseSidebar";
+import type { ApiErrorResponse } from "@/lib/api/common/types";
+
+// TODO 시간 없어서 일단 냅두고 추후 에러 관련 코드 전부 개선 예정
+const isApiErrorResponse = (error: unknown): error is ApiErrorResponse => {
+  return typeof error === "object" && error !== null && "error" in error;
+};
 
 export default function CourseDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
   const { data: course, isLoading, error } = useCourseBySlug(slug);
+  const addToCart = useAddToCart();
+  const { confirm } = useConfirm();
 
-  const handleAddToCart = () => {
-    // TODO: Implement add to cart functionality
-    console.log("Add to cart:", course?.id);
+  const handleAddToCart = async () => {
+    if (!course?.id) return;
+
+    addToCart.mutate(
+      { courseId: course.id },
+      {
+        onSuccess: async () => {
+          await confirm({
+            title: "장바구니에 추가되었습니다",
+            message: "장바구니에서 코스를 확인하고 결제할 수 있습니다.",
+            confirmText: "확인",
+            cancelText: "",
+          });
+        },
+        onError: (error) => {
+          const errorMessage = isApiErrorResponse(error)
+            ? error.error.message
+            : "장바구니에 추가하는 중 오류가 발생했습니다.";
+
+          confirm({
+            title: "오류",
+            message: errorMessage,
+            confirmText: "확인",
+            cancelText: "",
+            variant: "danger",
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -94,6 +130,7 @@ export default function CourseDetailPage() {
                 sections={course.sections}
                 lectures={course.lectures}
                 onAddToCart={handleAddToCart}
+                isAddingToCart={addToCart.isPending}
               />
             </div>
           </div>
