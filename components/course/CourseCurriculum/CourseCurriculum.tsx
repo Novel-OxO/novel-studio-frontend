@@ -90,9 +90,12 @@ export const CourseCurriculum: React.FC<CourseCurriculumProps> = ({
                   {sectionLectures.map((lecture) => (
                     <div
                       key={lecture.id}
-                      className="px-4 py-3 flex items-center justify-between hover:bg-neutral-3 transition-colors ml-8"
+                      className={`px-4 py-3 flex items-center justify-between hover:bg-neutral-3 transition-colors ml-8 ${
+                        lecture.isPreview ? "cursor-pointer" : ""
+                      }`}
                     >
                       <div className="flex items-center gap-3">
+                        {/* TODO: 미리보기 강의 아이콘 lucide-react */}
                         <svg
                           className="w-5 h-5 text-neutral-40"
                           fill="none"
