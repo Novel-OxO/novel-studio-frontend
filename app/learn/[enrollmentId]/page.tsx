@@ -68,10 +68,15 @@ export default function LearnPage() {
 
   const handleLectureChange = (lecture: EnrolledLecture) => {
     setCurrentLecture(lecture);
-    setWatchTime(lecture.progress?.watchTime || 0);
-    if (playerRef.current) {
-      playerRef.current.seekTo(lecture.progress?.watchTime || 0);
-    }
+    const startTime = lecture.progress?.watchTime || 0;
+    setWatchTime(startTime);
+
+    // Use setTimeout to ensure player is mounted before seeking
+    setTimeout(() => {
+      if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
+        playerRef.current.seekTo(startTime, 'seconds');
+      }
+    }, 100);
   };
 
   const handlePrevious = () => {
@@ -158,12 +163,14 @@ export default function LearnPage() {
         <div className="flex-1 relative aspect-video lg:aspect-auto">
           {currentLecture?.videoUrl ? (
             <ReactPlayer
+              key={currentLecture.id}
               ref={playerRef}
               url={currentLecture.videoUrl}
               width="100%"
               height="100%"
               controls
               playing={false}
+              progressInterval={1000}
               // @ts-ignore - react-player types are incompatible with Next.js dynamic import
               onProgress={handleProgress}
               onEnded={handleEnded}
