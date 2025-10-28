@@ -8,7 +8,6 @@ import type {
   ISODateString,
   PaginationParams,
 } from "../common/types";
-import type { VideoStorageInfo } from "../lectures/types";
 
 // ============================================
 // Request Types
@@ -78,7 +77,7 @@ export interface CourseLecture {
   isPreview: boolean;
   sectionId: string;
   courseId: string;
-  videoStorageInfo: VideoStorageInfo | null;
+  videoUrl: string | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }

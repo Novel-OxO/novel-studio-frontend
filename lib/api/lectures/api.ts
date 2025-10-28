@@ -3,7 +3,6 @@ import type {
   CreateLectureRequest,
   UpdateLectureRequest,
   Lecture,
-  VideoStorageInfo,
 } from "./types";
 
 // ============================================
@@ -15,20 +14,6 @@ const ENDPOINTS = {
   LECTURE_BY_ID: (courseId: string, lectureId: string) =>
     `/courses/${courseId}/lectures/${lectureId}`,
 } as const;
-
-// ============================================
-// Utility Functions
-// ============================================
-
-/**
- * Convert VideoStorageInfo object to JSON string for API request
- */
-const serializeVideoStorageInfo = (
-  info: VideoStorageInfo | undefined
-): string | undefined => {
-  if (!info) return undefined;
-  return JSON.stringify(info);
-};
 
 // ============================================
 // API Functions
@@ -52,10 +37,7 @@ const serializeVideoStorageInfo = (
  *   duration: 600,
  *   isPreview: false,
  *   sectionId: 'section_uuid',
- *   videoStorageInfo: JSON.stringify({
- *     url: 'https://...',
- *     key: 'videos/...'
- *   })
+ *   videoUrl: 'https://example.com/video.mp4'
  * });
  * ```
  *
@@ -75,41 +57,6 @@ const createLecture = async (
 };
 
 /**
- * Create a lecture with typed video storage info
- *
- * Convenience method that handles VideoStorageInfo serialization
- *
- * @param courseId - Parent course ID
- * @param lectureData - Lecture creation data with VideoStorageInfo object
- * @returns Created lecture information
- *
- * @example
- * ```ts
- * const lecture = await createLectureWithVideoInfo('course_id', {
- *   title: '1. TypeScript Basics',
- *   order: 0,
- *   sectionId: 'section_uuid',
- *   videoStorageInfo: {
- *     url: 'https://...',
- *     key: 'videos/...'
- *   }
- * });
- * ```
- */
-const createLectureWithVideoInfo = async (
-  courseId: string,
-  lectureData: Omit<CreateLectureRequest, "videoStorageInfo"> & {
-    videoStorageInfo?: VideoStorageInfo;
-  }
-): Promise<Lecture> => {
-  const { videoStorageInfo, ...rest } = lectureData;
-  return createLecture(courseId, {
-    ...rest,
-    videoStorageInfo: serializeVideoStorageInfo(videoStorageInfo),
-  });
-};
-
-/**
  * Update an existing lecture
  *
  * Requires admin authentication
@@ -123,7 +70,8 @@ const createLectureWithVideoInfo = async (
  * ```ts
  * const updated = await updateLecture('course_id', 'lecture_id', {
  *   title: '1. TypeScript Advanced',
- *   duration: 720
+ *   duration: 720,
+ *   videoUrl: 'https://example.com/new-video.mp4'
  * });
  * ```
  *
@@ -141,40 +89,6 @@ const updateLecture = async (
     ENDPOINTS.LECTURE_BY_ID(courseId, lectureId),
     updates
   );
-};
-
-/**
- * Update a lecture with typed video storage info
- *
- * Convenience method that handles VideoStorageInfo serialization
- *
- * @param courseId - Parent course ID
- * @param lectureId - Lecture unique identifier
- * @param updates - Lecture update data with VideoStorageInfo object
- * @returns Updated lecture information
- *
- * @example
- * ```ts
- * const updated = await updateLectureWithVideoInfo('course_id', 'lecture_id', {
- *   videoStorageInfo: {
- *     url: 'https://new-url...',
- *     key: 'videos/new-key...'
- *   }
- * });
- * ```
- */
-const updateLectureWithVideoInfo = async (
-  courseId: string,
-  lectureId: string,
-  updates: Omit<UpdateLectureRequest, "videoStorageInfo"> & {
-    videoStorageInfo?: VideoStorageInfo;
-  }
-): Promise<Lecture> => {
-  const { videoStorageInfo, ...rest } = updates;
-  return updateLecture(courseId, lectureId, {
-    ...rest,
-    videoStorageInfo: serializeVideoStorageInfo(videoStorageInfo),
-  });
 };
 
 /**
@@ -221,9 +135,7 @@ const deleteLecture = async (
  */
 export const lecturesApi = {
   create: createLecture,
-  createWithVideoInfo: createLectureWithVideoInfo,
   update: updateLecture,
-  updateWithVideoInfo: updateLectureWithVideoInfo,
   delete: deleteLecture,
 } as const;
 

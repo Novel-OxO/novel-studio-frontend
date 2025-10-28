@@ -12,7 +12,10 @@ export const useLectureMutations = (courseId: string) => {
       title: string;
       description?: string;
       order: number;
+      duration?: number;
+      isPreview?: boolean;
       sectionId: string;
+      videoUrl?: string;
     }) => lecturesApi.create(courseId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["course", courseId] });
@@ -39,6 +42,9 @@ export const useLectureMutations = (courseId: string) => {
         title?: string;
         description?: string;
         order?: number;
+        duration?: number;
+        isPreview?: boolean;
+        videoUrl?: string;
       };
     }) => lecturesApi.update(courseId, lectureId, data),
     onSuccess: () => {
@@ -74,30 +80,11 @@ export const useLectureMutations = (courseId: string) => {
     },
   });
 
-  const handleCreate = async (sectionId: string, lecturesCount: number) => {
-    const title = prompt("강의 제목을 입력하세요:");
-    if (!title) return;
-
-    const order = lecturesCount;
-    createMutation.mutate({ title, order, sectionId });
-  };
-
-  const handleUpdate = async (lecture: Lecture) => {
-    const title = prompt("강의 제목을 수정하세요:", lecture.title);
-    if (!title || title === lecture.title) return;
-
-    updateMutation.mutate({
-      lectureId: lecture.id,
-      data: { title },
-    });
-  };
 
   return {
     createMutation,
     updateMutation,
     deleteMutation,
-    handleCreate,
-    handleUpdate,
     error,
     setError,
   };

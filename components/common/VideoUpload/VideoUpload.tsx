@@ -3,21 +3,41 @@
 import { useRef, useState } from "react";
 import { mediaApi } from "@/lib/api/media/api";
 import { Button } from "../Button/Button";
-import type { ImageUploadProps } from "./types";
+import type { VideoUploadProps } from "./types";
 
-export const ImageUpload: React.FC<ImageUploadProps> = ({
+export const VideoUpload: React.FC<VideoUploadProps> = ({
   value,
   onChange,
+  onDurationChange,
   onError,
-  maxSizeInMB = 5,
+  maxSizeInMB = 5120,
   disabled = false,
   className = "",
-  variant = "profile",
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const calculateVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        const duration = Math.round(video.duration);
+        resolve(duration);
+      };
+
+      video.onerror = () => {
+        reject(new Error("비디오 메타데이터를 읽을 수 없습니다"));
+      };
+
+      video.src = URL.createObjectURL(file);
+    });
+  };
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -26,8 +46,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith("image/")) {
-      onError?.("이미지 파일만 업로드 가능합니다");
+    if (!file.type.startsWith("video/")) {
+      onError?.("비디오 파일만 업로드 가능합니다");
       return;
     }
 
@@ -42,15 +62,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       setIsUploading(true);
       setUploadProgress(0);
 
+      // Calculate video duration before upload
+      const duration = await calculateVideoDuration(file);
+
       const { cloudFrontUrl } = await mediaApi.upload(file, (progress) => {
         setUploadProgress(progress);
       });
 
       onChange(cloudFrontUrl);
+      onDurationChange?.(duration);
       setUploadProgress(0);
     } catch (error) {
-      console.error("Image upload failed:", error);
-      onError?.("이미지 업로드에 실패했습니다");
+      console.error("Video upload failed:", error);
+      onError?.("비디오 업로드에 실패했습니다");
     } finally {
       setIsUploading(false);
       // Reset file input
@@ -62,6 +86,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const handleRemove = () => {
     onChange(null);
+    onDurationChange?.(0);
   };
 
   const handleButtonClick = () => {
@@ -93,8 +118,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith("image/")) {
-      onError?.("이미지 파일만 업로드 가능합니다");
+    if (!file.type.startsWith("video/")) {
+      onError?.("비디오 파일만 업로드 가능합니다");
       return;
     }
 
@@ -109,57 +134,61 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       setIsUploading(true);
       setUploadProgress(0);
 
+      // Calculate video duration before upload
+      const duration = await calculateVideoDuration(file);
+
       const { cloudFrontUrl } = await mediaApi.upload(file, (progress) => {
         setUploadProgress(progress);
       });
 
       onChange(cloudFrontUrl);
+      onDurationChange?.(duration);
       setUploadProgress(0);
     } catch (error) {
-      console.error("Image upload failed:", error);
-      onError?.("이미지 업로드에 실패했습니다");
+      console.error("Video upload failed:", error);
+      onError?.("비디오 업로드에 실패했습니다");
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Variant에 따른 스타일 설정
-  const containerStyle = variant === "profile"
-    ? "w-32 h-32 rounded-full"
-    : "w-full aspect-video rounded-lg";
-
-  const imageAlt = variant === "profile" ? "Profile" : "Thumbnail";
-
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Upload progress - 업로드 중일 때만 표시 */}
       {isUploading && (
-        <div className={`${containerStyle} bg-neutral-10 border-2 border-neutral-20 flex items-center justify-center`}>
+        <div className="w-full aspect-video rounded-lg bg-neutral-10 border-2 border-neutral-20 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-sm font-medium text-neutral-70">
+            <div className="text-lg font-medium text-neutral-70">
               {uploadProgress}%
             </div>
-            <div className="text-xs text-neutral-50 mt-1">업로드 중...</div>
+            <div className="text-sm text-neutral-50 mt-2">업로드 중...</div>
+            <div className="w-64 h-2 bg-neutral-20 rounded-full mt-4">
+              <div
+                className="h-full bg-mint-50 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Preview - 업로드 중이 아닐 때만 표시 */}
+      {/* Video preview - 업로드 중이 아닐 때만 표시 */}
       {!isUploading && value && (
-        <div className={`relative ${containerStyle} overflow-hidden bg-neutral-10 border-2 border-neutral-20`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-neutral-10 border-2 border-neutral-20">
+          <video
             src={value}
-            alt={imageAlt}
-            className="w-full h-full object-cover"
-          />
+            controls
+            className="w-full h-full"
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
       )}
 
-      {/* No image placeholder with drag and drop - 업로드 중이 아니고 이미지가 없을 때만 표시 */}
+      {/* No video placeholder with drag and drop - 업로드 중이 아니고 비디오가 없을 때만 표시 */}
       {!isUploading && !value && (
         <div
-          className={`${containerStyle} bg-neutral-10 border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors ${
+          className={`w-full aspect-video rounded-lg bg-neutral-10 border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors ${
             isDragging
               ? "border-mint-50 bg-mint-5"
               : "border-neutral-30 hover:border-neutral-40 hover:bg-neutral-5"
@@ -169,9 +198,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           onDrop={handleDrop}
           onClick={handleButtonClick}
         >
-          <span className="text-neutral-50 text-xs text-center px-2 whitespace-pre-line">
-            {isDragging ? "드롭" : variant === "profile" ? "드래그\n또는\n클릭" : "이미지를\n드래그하거나\n클릭하여 업로드"}
-          </span>
+          <div className="text-center">
+            <span className="text-neutral-50 text-sm block mb-2">
+              {isDragging
+                ? "여기에 비디오를 드롭하세요"
+                : "비디오를 드래그하거나 클릭하여 업로드"}
+            </span>
+            <span className="text-neutral-40 text-xs">
+              MP4, MOV, AVI (최대 {maxSizeInMB}MB)
+            </span>
+          </div>
         </div>
       )}
 
@@ -179,7 +215,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="video/*"
         onChange={handleFileSelect}
         className="hidden"
         disabled={disabled || isUploading}
@@ -194,7 +230,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           onClick={handleButtonClick}
           disabled={disabled || isUploading}
         >
-          {value ? "이미지 변경" : "이미지 업로드"}
+          {value ? "비디오 변경" : "비디오 업로드"}
         </Button>
 
         {value && !isUploading && (
@@ -211,10 +247,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         )}
       </div>
 
-      {/* Helper text */}
-      <p className="text-xs text-neutral-50">
-        JPG, PNG, GIF 형식 (최대 {maxSizeInMB}MB)
-      </p>
     </div>
   );
 };
