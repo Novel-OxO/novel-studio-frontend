@@ -16,6 +16,7 @@ import type {
 const ENDPOINTS = {
   COURSES: "/courses",
   COURSE_BY_ID: (id: string) => `/courses/${id}`,
+  COURSE_BY_SLUG: (slug: string) => `/courses/detail/${slug}`,
 } as const;
 
 // ============================================
@@ -82,6 +83,27 @@ const getCourseById = async (
   params?: GetCourseByIdParams
 ): Promise<CourseWithDetails> => {
   return get<CourseWithDetails>(ENDPOINTS.COURSE_BY_ID(id), { params });
+};
+
+/**
+ * Get course by slug with sections and lectures (without video URLs)
+ *
+ * Public endpoint - no authentication required
+ *
+ * @param slug - Course slug (unique identifier in URL)
+ * @returns Course details with sections and lectures (video URLs excluded)
+ *
+ * @example
+ * ```ts
+ * const course = await getCourseBySlug('nestjs-fundamentals');
+ * // Returns course with sections and lectures
+ * // Lectures will not include video URLs for security
+ * ```
+ *
+ * @throws {ApiErrorResponse} 404 Not Found - Course not found
+ */
+const getCourseBySlug = async (slug: string): Promise<CourseWithDetails> => {
+  return get<CourseWithDetails>(ENDPOINTS.COURSE_BY_SLUG(slug));
 };
 
 /**
@@ -183,6 +205,7 @@ const deleteCourse = async (id: string): Promise<void> => {
  *
  * const { items } = await coursesApi.list({ page: 1 });
  * const course = await coursesApi.getById('id');
+ * const courseDetail = await coursesApi.getBySlug('nestjs-fundamentals');
  * const created = await coursesApi.create({ ... });
  * const updated = await coursesApi.update('id', { ... });
  * await coursesApi.delete('id');
@@ -191,6 +214,7 @@ const deleteCourse = async (id: string): Promise<void> => {
 export const coursesApi = {
   list: getCourses,
   getById: getCourseById,
+  getBySlug: getCourseBySlug,
   create: createCourse,
   update: updateCourse,
   delete: deleteCourse,
