@@ -1,0 +1,324 @@
+'use client';
+
+import { useParams, useSearchParams } from 'next/navigation';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { enrollmentsApi } from '@/lib/api/enrollments/api';
+import { useState, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
+import type { EnrolledLecture } from '@/lib/api/enrollments/types';
+
+export default function LearnPage() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const enrollmentId = params.enrollmentId as string;
+  const initialLectureId = searchParams.get('lectureId');
+
+  const [currentLecture, setCurrentLecture] = useState<EnrolledLecture | null>(null);
+  const [watchTime, setWatchTime] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const playerRef = useRef<any>(null);
+
+  // Fetch enrolled course detail
+  const { data: courseDetail, isLoading } = useQuery({
+    queryKey: ['enrolled-course', enrollmentId],
+    queryFn: () => enrollmentsApi.getCourseDetail(enrollmentId),
+  });
+
+  // Update progress mutation
+  const updateProgressMutation = useMutation({
+    mutationFn: (data: { lectureId: string; watchTime: number; isCompleted: boolean }) =>
+      enrollmentsApi.updateProgress(enrollmentId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['enrolled-course', enrollmentId] });
+    },
+  });
+
+  // Set initial lecture
+  useEffect(() => {
+    if (!courseDetail || currentLecture) return;
+
+    if (initialLectureId) {
+      // Find lecture by ID from URL
+      for (const section of courseDetail.sections) {
+        const lecture = section.lectures.find(l => l.id === initialLectureId);
+        if (lecture) {
+          setCurrentLecture(lecture);
+          setWatchTime(lecture.progress?.watchTime || 0);
+          return;
+        }
+      }
+    }
+
+    // Otherwise, select first lecture
+    if (courseDetail.sections.length > 0 && courseDetail.sections[0].lectures.length > 0) {
+      const firstLecture = courseDetail.sections[0].lectures[0];
+      setCurrentLecture(firstLecture);
+      setWatchTime(firstLecture.progress?.watchTime || 0);
+    }
+  }, [courseDetail, initialLectureId, currentLecture]);
+
+  // Get all lectures in order
+  const allLectures = courseDetail?.sections.flatMap(s => s.lectures) || [];
+  const currentLectureIndex = currentLecture
+    ? allLectures.findIndex(l => l.id === currentLecture.id)
+    : -1;
+
+  const handleLectureChange = (lecture: EnrolledLecture) => {
+    setCurrentLecture(lecture);
+    setWatchTime(lecture.progress?.watchTime || 0);
+    if (playerRef.current) {
+      playerRef.current.seekTo(lecture.progress?.watchTime || 0);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentLectureIndex > 0) {
+      handleLectureChange(allLectures[currentLectureIndex - 1]);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentLectureIndex < allLectures.length - 1) {
+      handleLectureChange(allLectures[currentLectureIndex + 1]);
+    }
+  };
+
+  const handleProgress = (state: { playedSeconds: number }) => {
+    setWatchTime(Math.floor(state.playedSeconds));
+  };
+
+  const handleEnded = () => {
+    if (currentLecture) {
+      updateProgressMutation.mutate({
+        lectureId: currentLecture.id,
+        watchTime: currentLecture.duration || 0,
+        isCompleted: true,
+      });
+
+      // Auto-play next lecture
+      if (currentLectureIndex < allLectures.length - 1) {
+        setTimeout(() => {
+          handleNext();
+        }, 1000);
+      }
+    }
+  };
+
+  const handlePause = () => {
+    if (currentLecture) {
+      updateProgressMutation.mutate({
+        lectureId: currentLecture.id,
+        watchTime,
+        isCompleted: false,
+      });
+    }
+  };
+
+  // Auto-save progress every 10 seconds
+  useEffect(() => {
+    if (!currentLecture) return;
+
+    const interval = setInterval(() => {
+      if (watchTime > 0) {
+        updateProgressMutation.mutate({
+          lectureId: currentLecture.id,
+          watchTime,
+          isCompleted: false,
+        });
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [currentLecture, watchTime]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">로딩 중...</div>
+      </div>
+    );
+  }
+
+  if (!courseDetail) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">강의를 찾을 수 없습니다.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden flex-col lg:flex-row">
+      {/* Main Content - Video Player */}
+      <div className="flex-1 flex flex-col bg-black">
+        {/* Video Player */}
+        <div className="flex-1 relative aspect-video lg:aspect-auto">
+          {currentLecture?.videoUrl ? (
+            <ReactPlayer
+              ref={playerRef}
+              url={currentLecture.videoUrl}
+              width="100%"
+              height="100%"
+              controls
+              playing={false}
+              // @ts-ignore - react-player types are incompatible with Next.js dynamic import
+              onProgress={handleProgress}
+              onEnded={handleEnded}
+              onPause={handlePause}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-white">
+              비디오를 로드할 수 없습니다.
+            </div>
+          )}
+        </div>
+
+        {/* Lecture Info & Controls */}
+        <div className="bg-gray-900 text-white p-4">
+          <div className="flex items-start justify-between mb-2">
+            <h2 className="text-xl font-semibold flex-1">{currentLecture?.title}</h2>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 text-sm ml-2"
+            >
+              {sidebarOpen ? '목록 닫기' : '목록 보기'}
+            </button>
+          </div>
+          {currentLecture?.description && (
+            <p className="text-sm text-gray-400 mb-4">{currentLecture.description}</p>
+          )}
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex gap-2">
+              <button
+                onClick={handlePrevious}
+                disabled={currentLectureIndex === 0}
+                className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                이전 강의
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={currentLectureIndex === allLectures.length - 1}
+                className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                다음 강의
+              </button>
+            </div>
+
+            <div className="text-sm text-gray-400">
+              진행률: {courseDetail.enrollment.progress}%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sidebar - Course Structure */}
+      <div
+        className={`
+          fixed lg:static inset-0 z-50 lg:z-auto
+          w-full lg:w-96 bg-white border-l border-gray-200 overflow-y-auto
+          transition-transform duration-300 lg:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+        `}
+      >
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="flex-1">
+            <h1 className="text-lg font-bold mb-1">{courseDetail.title}</h1>
+            <p className="text-sm text-gray-600">
+              전체 진행률: {courseDetail.enrollment.progress}%
+            </p>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Sections & Lectures */}
+        <div className="divide-y divide-gray-200">
+          {courseDetail.sections.map((section) => (
+            <div key={section.id} className="p-4">
+              <h3 className="font-semibold text-gray-900 mb-3">{section.title}</h3>
+              <div className="space-y-2">
+                {section.lectures.map((lecture) => {
+                  const isActive = currentLecture?.id === lecture.id;
+                  const isCompleted = lecture.progress?.isCompleted || false;
+                  const progress = lecture.progress?.watchTime || 0;
+                  const duration = lecture.duration || 0;
+                  const progressPercentage = duration > 0 ? (progress / duration) * 100 : 0;
+
+                  return (
+                    <button
+                      key={lecture.id}
+                      onClick={() => {
+                        handleLectureChange(lecture);
+                        setSidebarOpen(false);
+                      }}
+                      className={`w-full text-left p-3 rounded-lg transition-colors ${
+                        isActive
+                          ? 'bg-blue-50 border-2 border-blue-500'
+                          : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {isCompleted && (
+                              <span className="text-green-500 flex-shrink-0">✓</span>
+                            )}
+                            <h4
+                              className={`text-sm font-medium truncate ${
+                                isActive ? 'text-blue-700' : 'text-gray-900'
+                              }`}
+                            >
+                              {lecture.title}
+                            </h4>
+                          </div>
+                          {duration > 0 && (
+                            <div className="mt-2">
+                              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                <span>
+                                  {Math.floor(progress / 60)}:{String(progress % 60).padStart(2, '0')}
+                                </span>
+                                <span>
+                                  {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                <div
+                                  className="bg-blue-600 h-1.5 rounded-full"
+                                  style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {isActive && (
+                          <span className="text-blue-500 flex-shrink-0 text-xl">▶</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Backdrop for mobile sidebar */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
