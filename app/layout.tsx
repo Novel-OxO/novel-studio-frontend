@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header/Header";
 import { Footer } from "@/components/layout/Footer/Footer";
 import { ConfirmProvider } from "@/contexts/ConfirmContext";
+import { PromptProvider } from "@/contexts/PromptContext";
 
 export const metadata: Metadata = {
   title: "Novel Studio",
@@ -20,9 +21,11 @@ export default function RootLayout({
       <body className="antialiased flex flex-col min-h-screen">
         <Providers>
           <ConfirmProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <PromptProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </PromptProvider>
           </ConfirmProvider>
         </Providers>
       </body>

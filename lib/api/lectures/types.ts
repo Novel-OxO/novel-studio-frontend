@@ -1,18 +1,6 @@
 import type { ISODateString } from "../common/types";
 
 // ============================================
-// Shared Types
-// ============================================
-
-/**
- * Video storage information (S3/CloudFront)
- */
-export interface VideoStorageInfo {
-  url: string;
-  key: string;
-}
-
-// ============================================
 // Request Types
 // ============================================
 
@@ -23,7 +11,7 @@ export interface CreateLectureRequest {
   duration?: number;
   isPreview?: boolean;
   sectionId: string;
-  videoStorageInfo?: string;
+  videoUrl?: string;
 }
 
 export interface UpdateLectureRequest {
@@ -32,7 +20,7 @@ export interface UpdateLectureRequest {
   order?: number;
   duration?: number;
   isPreview?: boolean;
-  videoStorageInfo?: string;
+  videoUrl?: string;
 }
 
 // ============================================
@@ -48,7 +36,7 @@ export interface Lecture {
   isPreview: boolean;
   sectionId: string;
   courseId: string;
-  videoStorageInfo: VideoStorageInfo | null;
+  videoUrl: string | null;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }
